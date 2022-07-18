@@ -1,0 +1,17 @@
+{
+  "name": "blockchain-with-fireship",
+  "version": "0.0.1",
+  "description": "A simple blockchain developed with a Fireship video: https://youtu.be/qF7dkrce-mQ",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon -e js,ts",
+    "ts": "tsc -w"
+  },
+  "keywords": [],
+  "author": "NicoToff",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.0.5",
+    "typescript": "^4.7.4"
+  }
+}
