@@ -6,13 +6,11 @@ class Transaction {
         public payer: string, // Pub key
         public payee: string // Pub key
     ) {}
-    toString() {
-        return JSON.stringify(this);
-    }
 }
 
 class Block {
-    public nonce = Math.round(Math.random() * 999999999);
+    // A nonce is an arbitrary number that can be used just once in a cryptographic communication
+    public nonce = Math.round(((Math.random() * Date.now() * 999999999) % (Math.random() * 99999)) * 9999999);
 
     constructor(
         public prevHash: string | null, // Previous block in the chain
@@ -28,13 +26,13 @@ class Block {
         const digest: string = hashingAlgo.digest("hex"); // Generates a digest based on the data received
         // No more data can be added/digestified at this point!
         return digest;
-        /* This chaining would work too */
+        /* This method chaining would work too */
         // return crypto.createHash("SHA256").update(str).end().digest("hex");
     }
 }
 
 class Chain {
-    public static instance = new Chain(); // Singleton instance. There is only one blockchain.
+    public static instance: Chain = new Chain(); // Singleton instance. There is only one blockchain.
 
     chain: Block[]; // The chain is basically an array of Blocks
 
@@ -43,7 +41,7 @@ class Chain {
         this.chain = [new Block(null, new Transaction(100, "genesis", "nicotoff"))];
     }
 
-    get lastBlock() {
+    get lastBlock(): Block {
         return this.chain[this.chain.length - 1];
     }
 
@@ -54,21 +52,22 @@ class Chain {
         const isValid: boolean = verifier.verify(senderPubKey, signature);
 
         if (isValid) {
-            const newBlock = new Block(this.lastBlock.hash, transaction);
+            const newBlock: Block = new Block(this.lastBlock.hash, transaction);
             this.mine(newBlock.nonce);
+            console.log(transaction);
             this.chain.push(newBlock);
         }
     }
 
-    mine(nonce: number) {
-        let solution = 1;
-        console.log("Mining...");
+    mine(nonce: number): number {
+        let solution: number = 1;
+        console.log("⛏️ Mining...");
 
         while (true) {
-            const hash = crypto.createHash("MD5");
+            const hash: crypto.Hash = crypto.createHash("MD5");
             hash.update((nonce + solution).toString()).end();
 
-            const attempt = hash.digest("hex");
+            const attempt: string = hash.digest("hex");
 
             if (attempt.substring(0, 4) === "0000") {
                 console.log(`Solved: ${solution}`);
@@ -82,11 +81,12 @@ class Chain {
 
 class Wallet {
     public pubKey: string;
-    public privKey: string;
+    private privKey: string;
 
     constructor() {
-        const keyPair = crypto.generateKeyPairSync("rsa", {
-            modulusLength: 2048,
+        let keyPair: crypto.KeyPairSyncResult<string, string>;
+        keyPair = crypto.generateKeyPairSync("rsa", {
+            modulusLength: 4096,
             publicKeyEncoding: { type: "spki", format: "pem" },
             privateKeyEncoding: { type: "pkcs8", format: "pem" },
         });
@@ -105,6 +105,10 @@ class Wallet {
 
         Chain.instance.addBlock(transaction, this.pubKey, signature);
     }
+
+    toString() {
+        return this.pubKey;
+    }
 }
 
 const nicotoff = new Wallet();
@@ -114,5 +118,3 @@ const alice = new Wallet();
 satoshi.sendMoney(50, nicotoff.pubKey);
 nicotoff.sendMoney(25, alice.pubKey);
 alice.sendMoney(3, satoshi.pubKey);
-
-console.log(Chain.instance);
